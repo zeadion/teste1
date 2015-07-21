@@ -61,8 +61,8 @@
 <div id="grafico1">Grafico</div>
 
 
-<script src="/UAI/Scripts/jquery/jquery-1.9.1.js"></script>
-<script src="/UAI/Scripts/D3/d3.v3.5.6.js" charset="utf-8"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.js" charset="utf-8"></script>
 <script>
 console.clear();
 var data1 = 
