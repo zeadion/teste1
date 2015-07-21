@@ -1,37 +1,23 @@
-
-
-
 <style type="text/css">
   .background{
     fill: none;
       pointer-events: all;
   }
   .bar {
-    fill: #622; /*#558EBD;CF261D;*/
-    /*stroke:#000;*/
+    fill: #622;
   }
 
-  /*.bar:hover {
-    fill: brown;
-  }*/
+
   .bar.active {
     fill: #044 !important; /*669FCE*/
   }
-/*  .bar.max {
-    fill: #822; 
-    #DF362D;
-  }*/
-  /*.bar.min {
-    fill: #448;
-    #55BD8E;
-  }*/
+
   
   .tooltip {
     background-color: #FFF;
     padding: 2px 4px;
     border: solid 1px #CCC;
     border-radius: 3px;
-    /*left: 0 !important;*/
   }
 
   .baseline {
@@ -50,21 +36,13 @@
     stroke-width: 1px;
   }
 
-  /* .x.axis path {
-    display: none;
-  } */
-
 </style>
 
-
-
 <div id="grafico1">Grafico</div>
-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.js" charset="utf-8"></script>
 <script>
-console.clear();
 var data1 = 
   {
  "name": "flare",
@@ -568,6 +546,8 @@ function down(d) {
   enter.select("text").style("fill-opacity", 1e-6);
   enter.select("rect").style("fill", z(true));
 
+  var yAux = d3.scale.linear().range([h,0]).domain(y.domain());
+
   // Update the axis scales domain.
   y.domain([0,d3.max(d.children, function(d) { return d.value; })]).nice();
   x.domain(d.children.map(function(d){return d.name;}));
@@ -603,7 +583,8 @@ function down(d) {
 
   // Transition exiting bars to fade out.
   exit.selectAll("g").attr("transform", function (d){ return "translate("+d3.transform(d3.select(this).attr("transform")).translate[0]+",0)";});
-  exit.selectAll("rect").attr("y",h).attr("height",0);
+  // exit.selectAll("rect").attr("y",h).attr("height",0);
+  exit.selectAll("rect").attr("y",function(d){return yAux(d.value);}).attr("height",function(d){return h-yAux(d.value);});
   var exitTransition = exit
       .transition()
       .duration(duration)
