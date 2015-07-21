@@ -463,14 +463,18 @@ var pt_BR = {
 var BR = d3.locale(pt_BR);
 d3.time.format = pt_BR.timeFormat;
 
-
+//Configuracoes do grafico
 var m = [40, 60, 40, 40], // margin: top, bottom, right, left
   h = 650 - m[1] - m[3], // height
   w = 540 - m[0] - m[2], // width
+  //y range
   y = d3.scale.linear().range([h,0]),
+  //x range 
   x = d3.scale.ordinal().domain(data1.children.map(function(d){return d.name;})).rangeRoundBands([0, w],.1);
-  z = d3.scale.ordinal().range(["steelblue", "#aaa"]); // bar color
+  // bar color [has children, leaf]
+  z = d3.scale.ordinal().range(["steelblue", "#aaa"]); 
 
+//hierarchy based on value
 var hierarchy = d3.layout.partition()
     .value(function(d) { return d.size; });
 
@@ -493,6 +497,7 @@ var svg = d3.select("#grafico1").append("svg")
   .append("g")
     .attr("transform", "translate(" + m[3] + "," + m[0] + ")");
 
+//Background configuration
 svg.append("rect")
     .attr("class", "background")
     .attr("width", w)
@@ -500,9 +505,8 @@ svg.append("rect")
     .on("click", up)
   .on("mouseover", function(d) {
     d3.select(this).select("rect").classed("active", true);
-    var txt = "Clique para " ; 
-    txt+= d.parent ? d.parent.name : d.name;
-    tooltip.style("visibility", "visible").text("Clique para " + d.name + " ");
+    var txt = d.parent ? "Clique para " + d.parent.name : "Total: " + d.value;
+    tooltip.style("visibility", "visible").text(txt);
   })
   .on("mousemove", function(){
     return tooltip.style("top", (event.pageY-20)+"px").style("left",(event.pageX+10)+"px");
@@ -533,11 +537,8 @@ svg.selectAll(".xaxis text")  // select all the text elements for the xaxis
 svg.data(data1);
 var root = data1;
 
-  //console.log(root);
 hierarchy.nodes(root);
-// console.log("476: root.value: " + root.value);
   y.domain([0,root.value]).nice();
-  //x.domain(root.children.map(function(d){return d.name;}));
 
   down(root);
 
@@ -556,7 +557,6 @@ function down(d) {
 
       var x0 = x(d.name) ? x(d.name) : 0; // posicao da origem da animacao
 
-  //atualiza x-axis para poder calcular largura da barra
   // Enter the new bars for the clicked-on data.
   // Per above, entering bars are immediately visible.
   var enter = bar(d)
@@ -568,13 +568,11 @@ function down(d) {
   enter.select("text").style("fill-opacity", 1e-6);
   enter.select("rect").style("fill", z(true));
 
-  // Update the x-scale domain.
-  //d3.max(root.children,function(d){return d.value;})
-  //console.log(d3.max(d.children, function(d) { return d.value; }));
+  // Update the axis scales domain.
   y.domain([0,d3.max(d.children, function(d) { return d.value; })]).nice();
   x.domain(d.children.map(function(d){return d.name;}));
 
-  // Update the x-axis.
+  // Update the axis.
   svg.selectAll(".y.axis").transition()
       .duration(duration)
       .call(yAxis);
@@ -588,7 +586,6 @@ function down(d) {
 
   // Transition entering bars to their new position.
   var enterTransition = enter.transition()
-      // .attr("width", x.rangeBand()) 
       .duration(duration)
       .delay(function(d, i) { return i * delay; })
       .attr("transform", function(d, i) { 
@@ -605,17 +602,19 @@ function down(d) {
       .attr("width", x.rangeBand());
 
   // Transition exiting bars to fade out.
+  exit.selectAll("g").attr("transform", function (d){ return "translate("+d3.transform(d3.select(this).attr("transform")).translate[0]+",0)";});
   exit.selectAll("rect").attr("y",h).attr("height",0);
   var exitTransition = exit
       .transition()
       .duration(duration)
       .style("opacity", 1e-6)
-      .remove();
+      .remove()
+      ;
 
   exitTransition
       .selectAll("rect")
-      .attr("height", function(d) {return y(d.value);})
-      .attr("y",function(d){return h-y(d.value);})
+      .attr("height", function(d) {return h-y(d.value);})
+      .attr("y",function(d){return y(d.value);})
 
   // Rebind the current node to the background.
   svg.select(".background").data([d]).transition().duration(duration * 2);
@@ -623,7 +622,7 @@ function down(d) {
 
 function up(d) {
   if (!d.parent || this.__transition__) return;
-  var duration = d3.event && d3.event.altKey ? 7500 : 1000,
+  var duration = d3.event && d3.event.altKey ? 7500 :750,
       delay = duration / d.children.length;
 
   // Mark any currently-displayed bars as exiting.
@@ -631,18 +630,14 @@ function up(d) {
 
 
   // Update the axis scales domain.
-  y.domain([0,d3.max(d.parent.children, function(d) { return d.value; })]).nice();
   x.domain(d.parent.children.map(function(d){return d.name;}));
-
+    
   //get x position of parent to exit animation 
   var x0 = x(d.name) ? x(d.name) : 0;
-  
 
   // Enter the new bars for the clicked-on data's parent.
   var enter = bar(d.parent)
-      .attr("transform", function(d) { 
-        return "translate(" + x(d.name) + ", "+y(d.value)+" )"; //function(d){return y(d.value);}
-      })
+      .attr("transform", function(d) { return "translate(" + x(d.name) + ", "+(y(d.value))+" )";})
       .style("opacity", 1e-6);
 
   // Color the bars as appropriate.
@@ -652,29 +647,20 @@ function up(d) {
     .filter(function(p) { return p === d; })
       .style("fill-opacity", 1e-6);
 
-
-  // Update the x-axis.
-  svg.selectAll(".y.axis").transition()
-      .duration(duration * 2)
-      .call(yAxis);
-  svg.selectAll(".x.axis").transition()
-      .duration(duration)
-      .call(xAxis);
-  svg.selectAll(".xaxis text")  // select all the text elements for the xaxis 
-    .attr("transform", function(d) {
-      return "translate(" + ((this.getBBox().height*-2)+0) + "," + 20 + ")rotate(-45)";
-    });
-
+  y.domain([0,d3.max(d.parent.children, function(d) { return d.value; })]).nice();
   // Transition entering bars to fade in over the full duration.
   var enterTransition = enter.transition()
       .duration(duration * 2)
+
+      //
+      .attr("transform", function(d) { return "translate(" + x(d.name) + ", "+(y(d.value))+" )";})
+
       .style("opacity", 1);
 
   // Transition entering rects to the new x-scale.
   // When the entering parent rect is done, make it visible!
-  enterTransition.select("rect")
+  enterTransition.selectAll("rect")
       .attr("class","bar")
-      // .attr("y",function(d){return y(d.value);})
       .attr("height", function(d) { return (h-y(d.value)); })
       .attr("width", x.rangeBand())
       .each("end", function(p) { if (p === d) d3.select(this).style("fill-opacity", null); });
@@ -695,6 +681,17 @@ function up(d) {
       .attr("height", function(d) { return h-y(d.value); })
       .style("fill", z(true));
 
+  // Update the x-axis.
+  svg.selectAll(".y.axis").transition()
+      .duration(duration * 2)
+      .call(yAxis);
+  svg.selectAll(".x.axis").transition()
+      .duration(duration)
+      .call(xAxis);
+  svg.selectAll(".xaxis text")  // select all the text elements for the xaxis 
+    .attr("transform", function(d) {
+      return "translate(" + ((this.getBBox().height*-2)+0) + "," + 20 + ")rotate(-45)";
+    });
   // Remove exiting nodes when the last child has finished transitioning.
   exit.transition().duration(duration * 2).remove();
 
