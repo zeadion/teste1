@@ -450,7 +450,7 @@ var m = [40, 60, 40, 40], // margin: top, bottom, right, left
   //x range 
   x = d3.scale.ordinal().domain(data1.children.map(function(d){return d.name;})).rangeRoundBands([0, w],.1);
   // bar color [has children, leaf]
-  z = d3.scale.ordinal().range(["steelblue", "#aaa"]); 
+  z = d3.scale.ordinal().range(["#4682B4", "#aaa"]); 
 
 //hierarchy based on value
 var hierarchy = d3.layout.partition()
